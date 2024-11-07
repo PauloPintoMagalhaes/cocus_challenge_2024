@@ -1,32 +1,22 @@
 import os
-import sys
+from http import HTTPStatus
 
 import pytest
 
-# TODO find a way to get rid of this.
-# It displeases me profoundly.
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-from app import UPLOAD_FOLDER, app  # noqa
+from app import create_app
+from app.services.file_manager import get_and_delete_last_created_txt_file
 
-TEST_DATA_FOLDER = "tests/data/"
+TEST_DATA_FOLDER = "tests\\data\\"
 
 
 @pytest.fixture
 def client():
-    # Set up a test client for the Flask app
+    app = create_app()
     app.config["TESTING"] = True
-    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
     client = app.test_client()
     yield client
     # Clean up after each test
-    # TODO: For now this cleans every file even those manually uploaded.
-    # we want to change that later
-    for file in os.listdir(UPLOAD_FOLDER):
-        file_path = os.path.join(UPLOAD_FOLDER, file)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
+    get_and_delete_last_created_txt_file(app.config["UPLOAD_FOLDER"])
 
 
 def test_upload_file(client):
@@ -38,15 +28,30 @@ def test_upload_file(client):
         "/upload", data=data, content_type="multipart/form-data"
     )
 
-    assert response.status_code == 201
+    assert response.status_code == HTTPStatus.CREATED
     assert b"File uploaded successfully" in response.data
 
 
 def test_no_file(client):
     # Simulate a POST request without a file
     response = client.post("/upload", data={})
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert b"No file part" in response.data
+
+
+def test_invalid_extension(client):
+    file_path = os.path.join(TEST_DATA_FOLDER, "allowed_text.txt")
+    # NOTE: the file is being opened correctly, but it's in the
+    # wrong naming format
+    data = {"file": (open(file_path, "rb"), "allowed_text.pdf")}
+
+    # Make a POST request to the '/upload' endpoint
+    response = client.post(
+        "/upload", data=data, content_type="multipart/form-data"
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert b"File type not allowed, only .txt files" in response.data
 
 
 def test_empty_file(client):
@@ -55,7 +60,7 @@ def test_empty_file(client):
     response = client.post(
         "/upload", data=data, content_type="multipart/form-data"
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert b"File has no text" in response.data
 
 
@@ -65,5 +70,5 @@ def test_oversized_file(client):
     response = client.post(
         "/upload", data=data, content_type="multipart/form-data"
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert b"File exceeds the maximum size of 5.0 KB" in response.data
