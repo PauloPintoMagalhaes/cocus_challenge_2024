@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocus Challenge</title>
+    <link rel="stylesheet" href="../static/index.css">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+</head>
+<body>
+
+    <!-- Header -->
+    <header style="display: flex; align-items: center;">
+        <img src="{{ url_for('static', filename='cocus_logo.png') }}" alt="Logo" style="height: 50px; margin-right: 10px;">
+        <h1>Cocus Challenge</h1>
+    </header>
+
+    <!-- Main container for sidebar and content -->
+    <div class="container">
+
+        <!-- Main Content Area -->
+        <div class="content">
+            <h1>File Management</h1>
+            <form id="fileUploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                <label for="file">Select a .txt to upload:</label><br><br>
+                <input type="file" name="file" accept=".txt" required><br><br>
+                <button type="submit">Upload</button>
+            </form>
+            <div id="responseMessage"></div>
+        </div>
+        <div class="content">
+            <h1>Text Management</h1>
+            <button type="button" onclick="makeRequest('/random_line', 'text/plain')">Random Line - Plain</button>
+            <button type="button" onclick="makeRequest('/random_line', 'application/json')">Random Line - Json</button>
+            <button type="button" onclick="makeRequest('/random_line', 'application/xml')">Random Line - XML</button>
+        </div>
+        <div id="textResponse"></div>
+    </div>
+    
+    <script>
+        document.getElementById('fileUploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevent the form from submitting the default way
+
+            var formData = new FormData(this);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    document.getElementById('responseMessage').innerText = data.message;
+                    document.getElementById('responseMessage').style.color = "green";
+                } else if (data.error) {
+                    document.getElementById('responseMessage').innerText = data.error;
+                    document.getElementById('responseMessage').style.color = "red";
+                } else {
+                    // This case should not happen, but... redundancy.
+                    document.getElementById('responseMessage').innerText = "Unexpected response from server.";
+                    document.getElementById('responseMessage').style.color = "orange";
+                }
+            })
+            .catch(error => {
+                document.getElementById('responseMessage').innerText = 'Error: ' + error.message;
+            });
+        });
+        function makeRequest(endpoint, content_type="application/json") {
+            fetch(endpoint, {
+                method: "GET",
+                headers: {
+                    'Accept': content_type
+                },
+            })
+            .then(response => {
+                // Check the content type of the response
+                if (response.ok) {
+                    if (response.headers.get("Content-Type").includes("application/json")) {
+                        return response.json();
+                    } else if (response.headers.get("Content-Type").includes("application/xml")) {
+                        return response.text();
+                    } else {
+                        // Defaults to plain text
+                        return response.text();
+                    }
+                } else {
+                    throw new Error('Request failed with status ' + response.status);
+                }
+            })
+            .then(data => {
+                if (typeof data === 'string') {
+                    document.getElementById('textResponse').innerText = data;
+                } else {
+                    document.getElementById('textResponse').innerText = JSON.stringify(data, null, 2);
+                }
+            })
+            .catch(error => {
+                document.getElementById('textResponse').innerText = 'Error: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>
