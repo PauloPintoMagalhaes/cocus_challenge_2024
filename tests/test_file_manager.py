@@ -1,27 +1,27 @@
 import os
 
-from test_uploads import TEST_DATA_FOLDER
-
 from app.services.file_manager import (
+    get_all_text_file_path_list,
     get_and_delete_last_created_txt_file,
     get_random_text_file_path,
-    get_text_file_path_list,
 )
 from app.services.text_manager import get_last_uploaded_text_file_path
+from tests.test_routes import TEST_DATA_FOLDER
 
 
 def test_get_text_path_list():
-    file_path_list = get_text_file_path_list(TEST_DATA_FOLDER)
+    file_path_list = get_all_text_file_path_list(TEST_DATA_FOLDER)
 
     assert file_path_list == [
         "tests\\data\\allowed_text.txt",
+        "tests\\data\\big_allowed_text.txt",
         "tests\\data\\empty_text.txt",
         "tests\\data\\max_size_text.txt",
     ]
 
 
 def test_get_random_text_file_path():
-    file_path_list = get_text_file_path_list(TEST_DATA_FOLDER)
+    file_path_list = get_all_text_file_path_list(TEST_DATA_FOLDER)
     random_path_file = get_random_text_file_path(TEST_DATA_FOLDER)
 
     # Testing randomness is not possible, hence test that the
@@ -31,7 +31,7 @@ def test_get_random_text_file_path():
 
 def test_get_last_uploaded_text_file_path():
     file_path = get_last_uploaded_text_file_path(TEST_DATA_FOLDER)
-    assert file_path == "tests\\data\\max_size_text.txt"
+    assert file_path == "tests\\data\\big_allowed_text.txt"
 
 
 def test_get_and_delete_last_created_txt_file():
