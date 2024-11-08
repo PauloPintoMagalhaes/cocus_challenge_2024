@@ -3,7 +3,10 @@ from http import HTTPStatus
 
 from flask import Blueprint, Response, jsonify, render_template, request
 
-from app.services.text_manager import get_random_line_from_last_file
+from app.services.text_manager import (
+    get_random_line_from_last_file,
+    get_reversed_random_line_from_all_files,
+)
 from config.constants import UPLOAD_FOLDER
 from config.validations import (
     validate_file_has_text,
@@ -100,3 +103,15 @@ def random_line():
         jsonify({"message": "No files with valid text exist."}),
         HTTPStatus.OK,
     )
+
+
+@routes.route("/reversed_random_line", methods=["GET"])
+def reversed_random_line():
+    line_data = get_reversed_random_line_from_all_files(UPLOAD_FOLDER)
+    return (
+        jsonify({"line": line_data}),
+        HTTPStatus.OK,
+    )
+
+
+# TODO This needs error logging

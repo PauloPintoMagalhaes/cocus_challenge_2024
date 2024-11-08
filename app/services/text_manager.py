@@ -1,19 +1,23 @@
 import os
 import random
-import re
 
-from services.file_manager import get_last_uploaded_text_file_path
+from app.services.file_manager import (
+    get_all_text_file_path_list,
+    get_last_uploaded_text_file_path,
+)
 
 
 def get_file_contents(file_path):
     file_data = []
     file_name = None
+
     if file_path and os.path.isfile(file_path):
+        file_name = os.path.basename(file_path)
         with open(file_path, "rb") as file_text:
-            file_name = os.path.basename(file_path)
-            for index, text_line in enumerate(file_text):
-                if re.search(rb"\S", text_line):
-                    file_data.append((index, text_line.strip()))
+            for index, text_line in enumerate(file_text, start=1):
+                stripped_line = text_line.strip()
+                if stripped_line:
+                    file_data.append((index, stripped_line))
     return file_data, file_name
 
 
@@ -35,3 +39,21 @@ def get_random_line_from_last_file(folder):
             "file_name": file_name,
             "most_frequent_letter": _get_most_frequent_letter(line),
         }
+
+
+def _get_contents_from_all_files(folder):
+    file_paths = get_all_text_file_path_list(folder)
+    return [
+        text_line
+        for file_path in file_paths
+        for text_line in get_file_contents(file_path)[0]
+    ]
+
+
+def get_reversed_random_line_from_all_files(folder):
+    all_text_data = _get_contents_from_all_files(folder)
+    if not all_text_data:
+        return None
+
+    _, line_content = random.choice(all_text_data)
+    return line_content.decode("utf-8")[::-1]

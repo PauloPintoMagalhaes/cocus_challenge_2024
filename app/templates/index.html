@@ -8,17 +8,12 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
-
-    <!-- Header -->
     <header style="display: flex; align-items: center;">
         <img src="{{ url_for('static', filename='cocus_logo.png') }}" alt="Logo" style="height: 50px; margin-right: 10px;">
         <h1>Cocus Challenge</h1>
     </header>
 
-    <!-- Main container for sidebar and content -->
     <div class="container">
-
-        <!-- Main Content Area -->
         <div class="content">
             <h1>File Management</h1>
             <form id="fileUploadForm" action="/upload" method="post" enctype="multipart/form-data">
@@ -33,6 +28,8 @@
             <button type="button" onclick="makeRequest('/random_line', 'text/plain')">Random Line - Plain</button>
             <button type="button" onclick="makeRequest('/random_line', 'application/json')">Random Line - Json</button>
             <button type="button" onclick="makeRequest('/random_line', 'application/xml')">Random Line - XML</button>
+            <br>
+            <button type="button" onclick="makeRequest('/reversed_random_line')">Reversed Random Line</button>
         </div>
         <div id="textResponse"></div>
     </div>

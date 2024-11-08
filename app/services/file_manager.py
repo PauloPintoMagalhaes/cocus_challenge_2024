@@ -3,16 +3,16 @@ import random
 from glob import glob
 
 
-def get_text_file_path_list(folder):
+def get_all_text_file_path_list(folder):
     return glob(os.path.join(folder, "*.txt"))
 
 
 def get_random_text_file_path(folder):
-    return random.choice(get_text_file_path_list(folder))
+    return random.choice(get_all_text_file_path_list(folder))
 
 
 def get_last_uploaded_text_file_path(folder):
-    if files := get_text_file_path_list(folder):
+    if files := get_all_text_file_path_list(folder):
         return max(files, key=os.path.getctime)
 
 
